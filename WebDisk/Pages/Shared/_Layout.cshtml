@@ -1,0 +1,136 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - @Configuration["WebTitle"]</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" />
+
+    @*<environment include="Development">*@
+    <link rel="stylesheet" href="~/lib/element-ui/theme-chalk/index.css">
+    <link rel="stylesheet" href="~/lib/jquery-contextmenu/jquery.contextMenu.min.css">
+    <link rel="stylesheet" href="~/uppy.min.css" />
+    @*</environment>*@
+
+    @*<environment exclude="Development">
+            <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-contextmenu/2.7.1/jquery.contextMenu.min.css">
+        </environment>*@
+
+
+    <script>
+        //判断是否IE系列浏览器
+        function isIE() {
+            if (!!window.ActiveXObject || "ActiveXObject" in window) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+
+        ////判断是否IE10及以下浏览器
+        function isUnderIE11() {
+            if (!!window.ActiveXObject) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+        if (isUnderIE11()) {
+            document.write(" <div class='alert alert-danger text-center'>请不要使用IE10及以下浏览器访问，IE浏览器只支持IE11,请更换新版谷歌浏览器、Firefox、Edge等浏览器获得的体验</div>")
+        }
+    </script>
+</head>
+<body>
+
+   
+
+    <header>
+        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
+            <div class="container">
+                <a class="navbar-brand" asp-area="" asp-page="/Index">@Configuration["WebTitle"]</a>
+                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target=".navbar-collapse" aria-controls="navbarSupportedContent"
+                        aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="navbar-collapse collapse d-sm-inline-flex flex-sm-row-reverse">
+                    <ul class="navbar-nav flex-grow-1">
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-page="/Index">主页</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-page="/Privacy">隐私政策</a>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="navbar-collapse collapse d-sm-inline-flex flex-sm-row-reverse">
+                    <ul class="navbar-nav">
+                        @if (User?.Identity?.IsAuthenticated == false)
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" style="border-Radius: 15px;" asp-page="/Account/Login">登录</a>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" style="border-Radius: 15px;" href="#" title="个人中心">@User.Identity.Name</a>
+                            </li>
+
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" style="border-Radius: 15px;" href="/Account/Logout" title="注销">注销</a>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+    <div class="container-fluid">
+        <main role="main" class="pb-3">
+            @RenderBody()
+        </main>
+    </div>
+
+    <footer class="border-top footer text-muted">
+        <div class="container">
+            &copy; @DateTime.Now.Year - @Configuration["WebTitle"] - <a asp-area="" asp-page="/Privacy">Privacy</a>
+        </div>
+    </footer>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+
+    <!-- import Vue before Element -->
+    @*<environment include="Development">*@
+    <script src="~/js/vue.js"></script>
+    <script src="~/js/index.js"></script>
+    <script src="~/js/axios.min.js"></script>
+
+    <script src="~/lib/jquery-contextmenu/jquery.contextMenu.min.js"></script>
+    <script src="~/lib/jquery-contextmenu/jquery.ui.position.min.js"></script>
+
+
+    <script src="~/uppy.min.js"></script>
+
+    <script src="~/js/sweetalert2@9.js"></script>
+    @*</environment>*@
+
+    @*<environment exclude="Development">
+            <script src="https://unpkg.com/vue/dist/vue.js"></script>
+            <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+            <script src="https://cdn.bootcss.com/axios/0.19.0/axios.min.js"></script>
+
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-contextmenu/2.7.1/jquery.contextMenu.min.js"></script>
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-contextmenu/2.7.1/jquery.ui.position.js"></script>
+
+        </environment>*@
+
+    <script src="~/js/my/interface.js" asp-append-version="true"></script>
+
+    @RenderSection("Scripts", required: false)
+</body>
+</html>

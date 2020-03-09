@@ -1,0 +1,478 @@
+﻿@page "{Id?}"
+@model IndexModel
+@{
+    ViewData["Title"] = "主页";
+}
+<style>
+    .file-item:hover {
+    }
+</style>
+
+<div id="app" style="display:none">
+    <div class="row">
+        <div class="col-2">
+            <el-menu default-active="1"
+                     class="el-menu-vertical-demo">
+
+                <el-menu-item index="1" onclick="window.location.href='/Index'">
+                    <i class="el-icon-document"></i>
+                    <span slot="title">全部文件</span>
+                </el-menu-item>
+
+                <el-menu-item index="2" onclick="window.location.href='/Recyclebin'">
+                    <i class="el-icon-delete"></i>
+                    <span slot="title">回收站</span>
+                </el-menu-item>
+
+                @*<el-menu-item index="3" onclick="window.location.href='/MyShared'">
+                        <i class="el-icon-share"></i>
+                        <span slot="title">我的分享</span>
+                    </el-menu-item>*@
+            </el-menu>
+
+            @*<div class="border-right border-dark">
+
+                    <el-tree :data="directories"
+                             node-key="id"
+                             :expand-on-click-node="false"
+                             highlight-current
+                             @@node-contextmenu="handeContextmenu">
+                        <span class="custom-tree-node" slot-scope="{ node, data }">
+                            <span :id="data.id">
+
+                                <a :href="getUrl(data.id)" style="color:black">
+                                    <img src="~/images/FileType/Small/FolderType.png" />
+                                    <span style="font-size:10px">{{ data.name }}</span>
+                                </a>
+                            </span>
+                        </span>
+                    </el-tree>
+                    <hr />
+                </div>*@
+        </div>
+
+
+        <div class="col-10" style="min-height:800px;border:0">
+            @*<el-button>上传<i class="el-icon-upload el-icon--right"></i></el-button>
+                <el-button>下载<i class="el-icon-upload el-icon--right"></i></el-button>*@
+            <div class="row">
+                <div class="col">
+                    <el-button size="mini" onclick="createDirectory('@Model.Id')"><i class="el-icon-folder-add"></i>&nbsp;新建文件夹</el-button>
+                    @*<el-button icon="el-icon-edit"></el-button>
+                        <el-button icon="el-icon-share"></el-button>
+                        <el-button icon="el-icon-delete"></el-button>
+                        <el-button icon="el-icon-search">搜索</el-button>*@
+                </div>
+                <div class="col text-right">
+                    <el-tag align="right">使用提示：鼠标右键可弹出操作菜单</el-tag>
+                </div>
+            </div>
+
+            <hr />
+            <div class="row mb-2 mt-2">
+                <div class="col-auto">
+                    @{
+                        var parent = await DirectoryService.GetParentDirectoryAsync(Model.Id ?? 0);
+
+                        <el-button size="mini" onclick="window.location.href='/Index/@parent?.Id'"><i class="el-icon-arrow-left"></i></el-button>
+                    }
+
+                    <el-button size="mini" onclick="window.location.reload()"><i class="el-icon-refresh"></i></el-button>
+
+                </div>
+
+                <div class="col-auto">
+                    <el-breadcrumb separator=">" class="mt-2">
+                        @{
+                            var curDir = await FileDbContext.FileDirectories.FirstOrDefaultAsync(e => e.Id == Model.Id);
+                            if (curDir != null)
+                            {
+                                var path = curDir.Path.Split('|');
+                                foreach (var item in path)
+                                {
+                                    if (item == "0")
+                                    {
+                                        <el-breadcrumb-item><a href="/Index">我的网盘</a></el-breadcrumb-item>
+                                        continue;
+                                    }
+
+                                    var dirInfo = await FileDbContext.FileDirectories.FirstOrDefaultAsync(e => e.Id == long.Parse(item));
+
+                                    <el-breadcrumb-item><a href="/Index/@dirInfo.Id">@dirInfo.Name</a></el-breadcrumb-item>
+                                }
+                            }
+                            else
+                            {
+                                <el-breadcrumb-item><a href="/Index">我的网盘</a></el-breadcrumb-item>
+                            }
+                        }
+                    </el-breadcrumb>
+                </div>
+
+            </div>
+            <hr />
+
+            @{
+                /// <summary>
+                /// 通过文件链接地址获取默认的显示图标
+                /// </summary>
+                /// <returns></returns>
+                string GetFileDefaultIconByFileUrl(string filename, string url)
+                {
+                    var extension = System.IO.Path.GetExtension(filename).ToLower();
+                    string iconDir = "/images/FileType/Big/";
+
+                    Dictionary<string, string[]> pairs = new Dictionary<string, string[]>();
+                    pairs.Add("ApkType.png", new[] { ".apk" });
+                    pairs.Add("Apps.png", new[] { ".apk" });
+                    pairs.Add("CADType.png", new[] { ".cad" });
+                    pairs.Add("DocType.png", new[] { ".doc", ".docx" }); //doc文档
+                    pairs.Add("EpubType.png", new[] { ".apk" });
+                    pairs.Add("ExeType.png", new[] { ".exe" });  //exe可执行
+                    pairs.Add("FolderType.png", new[] { ".apk" });
+                    pairs.Add("ImgType.png", new[] { ".png", ".jpg", ".jpeg", ".bmp", ".gif" });//图片
+                    pairs.Add("IpaType.png", new[] { ".apk" });
+                    pairs.Add("KeyType.png", new[] { ".apk" });
+                    pairs.Add("MixFileType.png", new[] { ".apk" });
+                    pairs.Add("MusicType.png", new[] { ".mp3" });
+                    pairs.Add("NumbersType.png", new[] { ".apk" });
+                    pairs.Add("OtherType.png", new[] { ".apk" });
+                    pairs.Add("PagesType.png", new[] { ".apk" });
+                    pairs.Add("PdfType.png", new[] { ".pdf" });
+                    pairs.Add("PptType.png", new[] { ".ppt", ".pptx" }); //ppt
+                    pairs.Add("RarType.png", new[] { ".zip", ".rar", ".7z" }); //压缩包
+                    pairs.Add("TorrentType.png", new[] { ".apk" });
+                    pairs.Add("TxtType.png", new[] { ".txt" });
+                    pairs.Add("VideoType.png", new[] { ".mp4", ".avi" });//视频
+                    pairs.Add("VsdType.png", new[] { ".apk" });
+                    pairs.Add("XlsType.png", new[] { ".xls", ".xlsx" });
+
+                    var icon = pairs.FirstOrDefault(e => e.Value.Contains(extension)).Key;
+                    if (!string.IsNullOrEmpty(icon))
+                    {
+                        //图片直接返回url
+                        if (icon == "ImgType.png")
+                        {
+                            return url;
+                        }
+                        return iconDir + icon;
+                    }
+                    return iconDir + "OtherType.png";
+                }
+            }
+
+            @{
+                string userId = User.Claims.FirstOrDefault(e => e.Type == "sub")?.Value;
+
+                var subDirectories = await DirectoryService.GetSubDirectoriesAsync(Model.Id ?? 0);
+                //目录
+                foreach (var dir in subDirectories.OrderBy(e => e.Name))
+                {
+                    <el-button style="width:120px;height:120px;border:0" class="dir-item" dirid="@dir.Id" title="@dir.Name">
+                        <img src="~/images/FileType/Big/FolderType.png" class="img-fluid" style="width:60px;height:60px" /><br>
+                        <span style="font-size:12px">@dir.Name</span>
+                    </el-button>
+                }
+
+                //文件
+                var curDirectoryFiles = await DirectoryService.GetDirectoryFilesAsync(Model.Id ?? 0);
+                foreach (var file in curDirectoryFiles.OrderBy(e => e.OriginFileName))
+                {
+                    string fileName = file.OriginFileName.Length > 9 ? file.OriginFileName.Substring(0, 9) + "..." : file.OriginFileName;
+
+                    <el-button style="width:120px;height:120px;border:0" class="file-item" fileid="@file.Id" title="@file.OriginFileName">
+                        <img src="@GetFileDefaultIconByFileUrl(file.OriginFileName,file.UploadFilePath)" class="img-fluid" style="width:60px;height:60px" />
+                        <br /><span style="font-size:12px">@fileName</span>
+                    </el-button>
+                }
+            }
+
+
+            <div id="uploadFileArea" class="mt-5"></div>
+        </div>
+    </div>
+</div>
+
+
+
+@section Scripts{
+
+    @*<script src="//cdn.jsdelivr.net/npm/sortablejs@1.8.4/Sortable.min.js"></script>
+
+        <script src="//cdnjs.cloudflare.com/ajax/libs/Vue.Draggable/2.20.0/vuedraggable.umd.min.js"></script>*@
+
+    <script>
+        var vue = new Vue({
+            el: '#app',
+
+            data: {
+                directories: []
+            },
+            created: function () {
+                var t = this
+                axios.get("/Index?handler=Directories").then(function (res) {
+                    //
+                    t.directories = res.data
+                    console.log(t.directories)
+                })
+            },
+            mounted: function () {
+                $("#app").removeAttr("style")
+            },
+            methods: {
+                getUrl: function (id) {
+                    return "/Index/" + id
+                },
+                handeContextmenu: function (event, data, node, thi) {
+                    $(event.target).contextMenu(/*{ x: event.clientX, y: event.clientY }*/);
+                }
+            }
+        })
+
+
+        $(function () {
+            //主区域
+            $.contextMenu({
+                selector: '.col-10',
+                //trigger: 'none',
+                callback: function (key, options, e) {
+                    if (key == "add") {
+                        createDirectory('@Model.Id')
+                    }else if (key == "reflush") {
+                        window.location.reload()
+                    }
+                },
+                items: {
+                    "add": { name: "新建文件夹", icon: "add" },
+                    "reflush": { name: "刷新", icon: "reload" }
+                }
+            });
+
+            //目录选项
+            $.contextMenu({
+                selector: '.dir-item',
+                //trigger: 'none',
+                callback: function (key, options, e) {
+                    var dirId = $(this).attr('dirid')
+                    var name = $(this).text()
+                    if (key == "open") {
+                        if (dirId && dirId !== "") {
+                            window.location.href = "/Index/" + dirId
+                        }
+                    } else if (key == "delete") {
+                        deleteDirectory(dirId, name)
+                    } else if (key == "rename") {
+                        renameDirectory(dirId,name)
+                    }
+                },
+                items: {
+                    "open": { name: "打开", icon: "open" },
+                    "rename": { name: "重命名", icon: "open" },
+                    "delete": { name: "删除", icon: "delete" }
+                }
+            });
+
+            //双击目录
+            $('.dir-item').dblclick(function () {
+                var dirId = $(this).attr('dirid')
+                window.location.href = "/Index/" + dirId
+            })
+
+            //双击文件 下载
+             $('.file-item').dblclick(function () {
+                 var fileId = $(this).attr('fileid')
+                 downloadFile(fileId)
+            })
+
+            $(document).contextmenu(function(){
+                return false;
+            });
+
+            $('.file-item').mousedown(function(e){
+                if (3 == e.which) {
+                     $(this).focus()                }
+            })
+
+            $('.dir-item').mousedown(function(e){
+                if (3 == e.which) {
+                     $(this).focus()                }
+            })
+
+            //文件选项
+            $.contextMenu({
+                selector: '.file-item',
+                //trigger: 'none',
+                callback: function (key, options, e) {
+                    var fileId = $(this).attr('fileid')
+                    var name = $(this).text()
+
+                    if (key == "download") {
+                        downloadFile(fileId)
+                    } else if (key == "delete") {
+                        deleteFile(fileId, name)
+                    } else if (key == "rename") {
+                        renameFile(fileId, name)
+                    } else if (key == "info") {
+                        getFileInfoDlg(fileId)
+                    } else if (key == "shared") {
+                        sharedFile(fileId)
+                    }
+                },
+                items: {
+                    //"open": { name: "打开", icon: "open" },
+                    "download": { name: "下载", icon: "download" },
+                    "shared": { name: "分享", icon: "shared" },
+                    "rename": { name: "重命名", icon: "rename" },
+                    "delete": { name: "删除", icon: "delete" },
+                    "info": { name: "属性", icon: "rename" },
+                }
+            });
+
+
+            //左边
+            $.contextMenu({
+                selector: '.el-tree-node__content',
+                trigger: 'none',
+                callback: function (key, options, e) {
+                    var m = "clicked: " + key;
+                    console.log(key)
+                    //当前点击目录id
+                    var curClickDirectoryId = $(".custom-tree-node", this).children().attr("id")
+                    console.log(curClickDirectoryId)
+                    if (key == "add") {
+                        createDirectory(curClickDirectoryId)
+                    } else if (key == "delete") {
+                        deleteDirectory(curClickDirectoryId)
+                    }
+                },
+                items: {
+                    "add": { name: "增加目录", icon: "add" },
+                    "delete": { name: "删除目录", icon: "delete" },
+                    //"cut": { name: "Cut", icon: "cut" },
+                    //"copy": { name: "Copy", icon: "copy" },
+                    //"paste": { name: "Paste", icon: "paste" },
+                    //"sep1": "---------",
+                    //"quit": { name: "Quit", icon: function ($element, key, item) { return 'context-menu-icon context-menu-icon-quit'; } }
+                }
+            });
+        });
+    </script>
+
+    <script>
+        var zhcn = {
+            strings: {
+                // When `inline: false`, used as the screen reader label for the button that closes the modal.
+                closeModal: '关闭弹框',
+                // Used as the screen reader label for the plus (+) button that shows the “Add more files” screen
+                addMoreFiles: '添加更多文件',
+                // Used as the header for import panels, e.g., “Import from Google Drive”.
+                importFrom: '从 %{name} 导入',
+                // When `inline: false`, used as the screen reader label for the dashboard modal.
+                dashboardWindowTitle: 'Uppy Dashboard Window (Press escape to close)',
+                // When `inline: true`, used as the screen reader label for the dashboard area.
+                dashboardTitle: 'Uppy Dashboard',
+                // Shown in the Informer when a link to a file was copied to the clipboard.
+                copyLinkToClipboardSuccess: '链接已复制',
+                // Used when a link cannot be copied automatically — the user has to select the text from the
+                // input element below this string.
+                copyLinkToClipboardFallback: '复制下面的链接',
+                // Used as the hover title and screen reader label for buttons that copy a file link.
+                copyLink: '复制链接',
+                // Used as the hover title and screen reader label for file source icons, e.g., “File source: Dropbox”.
+                fileSource: '文件来源: %{name}',
+                // Used as the label for buttons that accept and close panels (remote providers or metadata editor)
+                done: '完成',
+                // Used as the screen reader label for buttons that remove a file.
+                removeFile: '移除文件',
+                // Used as the screen reader label for buttons that open the metadata editor panel for a file.
+                editFile: '编辑文件',
+                // Shown in the panel header for the metadata editor. Rendered as “Editing image.png”.
+                editing: '正在编辑 %{file}',
+                // Text for a button shown on the file preview, used to edit file metadata
+                edit: '编辑',
+                // Used as the screen reader label for the button that saves metadata edits and returns to the
+                // file list view.
+                finishEditingFile: '结束编辑文件',
+                // Used as the label for the tab button that opens the system file selection dialog.
+                myDevice: '我的设备',
+                // Shown in the main dashboard area when no files have been selected, and one or more
+                // remote provider plugins are in use. %{browse} is replaced with a link that opens the system
+                // file selection dialog.
+                dropPasteImport: 'Drop files here, paste, %{browse} or import from',
+                // Shown in the main dashboard area when no files have been selected, and no provider
+                // plugins are in use. %{browse} is replaced with a link that opens the system
+                // file selection dialog.
+                dropPaste: '拖拽文件到这里 或者 %{browse},支持断点续传',
+                // This string is clickable and opens the system file selection dialog.
+                browse: '浏览本地文件',
+                // Used as the hover text and screen reader label for file progress indicators when
+                // they have been fully uploaded.
+                uploadComplete: '上传完成',
+                // Used as the hover text and screen reader label for the buttons to resume paused uploads.
+                resumeUpload: '继续',
+                // Used as the hover text and screen reader label for the buttons to pause uploads.
+                pauseUpload: '暂停',
+                // Used as the hover text and screen reader label for the buttons to retry failed uploads.
+                retryUpload: '重试',
+                addMore: '添加更多',
+                back: '返回',
+                cancel: '取消',
+                // Used in a title, how many files are currently selected
+                xFilesSelected: {
+                    0: '%{smart_count} 个文件已选择',
+                    1: '%{smart_count} 个文件已选择'
+                },
+
+                // uppy/status-bar strings:
+                uploading: '上传中...',
+                complete: '完成'
+                // ...etc
+            }
+        };
+
+        @inject Microsoft.Extensions.Configuration.IConfiguration Configuration
+         function initUppy () {
+             var uppy = Uppy.Core({
+                        autoProceed: true,
+                        restrictions: {
+                        maxFileSize: @(int.Parse(Configuration["TusFileSizeOfM"]) * 1024 * 1024),
+                        maxNumberOfFiles: 10
+                        },
+                    })
+                    .use(Uppy.Dashboard, {
+                        inline: true,
+                        target: '#uploadFileArea',
+                        locale: zhcn,
+                        height: 200,
+                        showSelectedFiles:false
+                    })
+                    .use(Uppy.Tus, { endpoint: '/TusFiles' })
+
+
+            uppy.on('upload-success', function (file, response){
+
+                 var fs = [{
+                    Link: response.uploadURL,
+                    FileName: file.name,
+                    Size:file.size
+                }]
+                         axios.post("/Index/@Model.Id?handler=UploadFile",fs)
+                        .then(function (res) {
+                            //swal("成功", "成功上传附件信息到网盘", "success")
+                            window.location.reload()
+                        }).catch(function (err) {
+                            t.removeFile(file)
+                            //swal("上传附件信息到网盘失败", JSON.stringify(err), "error")
+                        })
+                    })
+
+                    uppy.on('upload-error', function (file, error, response){
+                        swal(error)
+                        console.log('error with file:', file.id)
+                        console.log('error message:', error)
+                    })
+        }
+
+        initUppy()
+    </script>
+}

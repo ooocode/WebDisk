@@ -1,0 +1,261 @@
+﻿@page
+@model WebDisk.RecyclebinModel
+@{
+    ViewData["Title"] = "回收站";
+}
+
+
+
+<div id="app" style="display:none">
+    <div class="row">
+        <div class="col-2">
+            <el-menu default-active="2" class="el-menu-vertical-demo">
+                <el-menu-item index="1" onclick="window.location.href='/Index'">
+                    <i class="el-icon-document"></i>
+                    <span slot="title">全部文件</span>
+                </el-menu-item>
+
+                <el-menu-item index="2" onclick="window.location.href='/Recyclebin'">
+                    <i class="el-icon-delete"></i>
+                    <span slot="title">回收站</span>
+                </el-menu-item>
+
+                @*<el-menu-item index="3" onclick="window.location.href='/MyShared'">
+                    <i class="el-icon-share"></i>
+                    <span slot="title">我的分享</span>
+                </el-menu-item>*@
+            </el-menu>
+
+        </div>
+
+        <div class="col-10" id="mainArea">
+            <el-page-header content="回收站">
+            </el-page-header>
+            <hr />
+            @{
+                //被删除的文件夹
+                var userId = User?.Claims?.FirstOrDefault(e => e.Type == "sub")?.Value;
+                var dirs = FileDbContext.FileDirectories.Where(e => e.UserId == userId && e.IsDeleted == true);
+                foreach (var dir in dirs)
+                {
+                    <el-button style="width:120px;height:120px;border:0" class="dir-item" dirid="@dir.Id">
+                        <img src="~/images/FileType/Big/FolderType.png" class="img-fluid" style="width:60px;height:60px" /><br>
+                        <span style="font-size:12px">@dir.Name</span>
+                    </el-button>
+                }
+
+               /// <summary>
+                /// 通过文件链接地址获取默认的显示图标
+                /// </summary>
+                /// <returns></returns>
+                string GetFileDefaultIconByFileUrl(string filename, string url)
+                {
+                    var extension = System.IO.Path.GetExtension(filename).ToLower();
+                    string iconDir = "/images/FileType/Big/";
+
+                    Dictionary<string, string[]> pairs = new Dictionary<string, string[]>();
+                    pairs.Add("ApkType.png", new[] { ".apk" });
+                    pairs.Add("Apps.png", new[] { ".apk" });
+                    pairs.Add("CADType.png", new[] { ".cad" });
+                    pairs.Add("DocType.png", new[] { ".doc", ".docx" }); //doc文档
+                    pairs.Add("EpubType.png", new[] { ".apk" });
+                    pairs.Add("ExeType.png", new[] { ".exe" });  //exe可执行
+                    pairs.Add("FolderType.png", new[] { ".apk" });
+                    pairs.Add("ImgType.png", new[] { ".png", ".jpg", ".jpeg", ".bmp", ".gif" });//图片
+                    pairs.Add("IpaType.png", new[] { ".apk" });
+                    pairs.Add("KeyType.png", new[] { ".apk" });
+                    pairs.Add("MixFileType.png", new[] { ".apk" });
+                    pairs.Add("MusicType.png", new[] { ".mp3" });
+                    pairs.Add("NumbersType.png", new[] { ".apk" });
+                    pairs.Add("OtherType.png", new[] { ".apk" });
+                    pairs.Add("PagesType.png", new[] { ".apk" });
+                    pairs.Add("PdfType.png", new[] { ".pdf" });
+                    pairs.Add("PptType.png", new[] { ".ppt", ".pptx" }); //ppt
+                    pairs.Add("RarType.png", new[] { ".zip", ".rar", ".7z" }); //压缩包
+                    pairs.Add("TorrentType.png", new[] { ".apk" });
+                    pairs.Add("TxtType.png", new[] { ".txt" });
+                    pairs.Add("VideoType.png", new[] { ".mp4", ".avi" });//视频
+                    pairs.Add("VsdType.png", new[] { ".apk" });
+                    pairs.Add("XlsType.png", new[] { ".xls", ".xlsx" });
+
+                    var icon = pairs.FirstOrDefault(e => e.Value.Contains(extension)).Key;
+                    if (!string.IsNullOrEmpty(icon))
+                    {
+                        //图片直接返回url
+                        if (icon == "ImgType.png")
+                        {
+                            return url;
+                        }
+                        return iconDir + icon;
+                    }
+                    return iconDir + "OtherType.png";
+                }
+
+            
+
+
+                var files = await FileDbContext.Files.Where(e => e.UserId == userId && e.IsDeleted).ToListAsync();
+                foreach (var file in files)
+                {
+                    <el-button style="width:120px;height:120px;border:0" class="file-item" fileid="@file.Id">
+                        <img src="@GetFileDefaultIconByFileUrl(file.OriginFileName,file.UploadFilePath)" class="img-fluid" style="width:60px;height:60px" />
+                        <br /><span style="font-size:12px">@file.OriginFileName</span>
+                    </el-button>
+                }
+
+            }
+        </div>
+    </div>
+</div>
+
+
+
+@section Scripts{
+
+    <script>
+        var vue = new Vue({
+            el: '#app',
+
+            data: {
+                directories: []
+            },
+            created: function () {
+                var t = this
+                axios.get("/Index?handler=Directories").then(function (res) {
+                    //
+                    t.directories = res.data
+                    console.log(t.directories)
+                })
+            },
+            mounted: function () {
+                $("#app").removeAttr("style")
+            },
+
+            methods: {
+                getUrl: function (id) {
+                    return "/Index/" + id
+                },
+                handeContextmenu: function (event, data, node, thi) {
+                    $(event.target).contextMenu(/*{ x: event.clientX, y: event.clientY }*/);
+                }
+            }
+        })
+
+
+        $(function () {
+            //主区域
+            $.contextMenu({
+                selector: '#mainArea',
+                //trigger: 'none',
+                callback: function (key, options, e) {
+                    if (key == "add") {
+                        @*createDirectory('@Model.Id')*@
+                    }else if (key == "reflush") {
+                        window.location.reload()
+                    }
+                },
+                items: {
+                    //"add": { name: "新建文件夹", icon: "add" },
+                    "reflush": { name: "刷新", icon: "add" }
+                }
+            });
+
+            //目录选项
+            $.contextMenu({
+                selector: '.dir-item',
+                //trigger: 'none',
+                callback: function (key, options, e) {
+                    var dirId = $(this).attr('dirid')
+                    var name = $(this).text()
+                    if (key == "recoveryDirectory") {
+                        if (dirId && dirId !== "") {
+                            recoveryDirectory(dirId)
+                        }
+                    } else if (key == "delete") {
+                        deleteDirectory(dirId,name)
+                    }
+                },
+                items: {
+                    "recoveryDirectory": { name: "还原", icon: "open" },
+                    "delete": { name: "彻底删除", icon: "delete" }
+                }
+            });
+
+            //$('.dir-item').dblclick(function () {
+            //    var dirId = $(this).attr('dirid')
+            //    window.location.href = "/Index/" + dirId
+            //})
+
+            $(document).contextmenu(function(){
+                return false;
+            });
+
+            $('.file-item').mousedown(function(e){
+                if (3 == e.which) {
+                     $(this).focus()                }
+            })
+
+            $('.dir-item').mousedown(function(e){
+                if (3 == e.which) {
+                     $(this).focus()                }
+            })
+
+            //文件选项
+            $.contextMenu({
+                selector: '.file-item',
+                //trigger: 'none',
+                callback: function (key, options, e) {
+                    var fileId = $(this).attr('fileid')
+                    var name = $(this).text()
+
+                    if (key == "recovery") {
+                        recoveryFile(fileId)
+                    } else if (key == "delete") {
+                        deleteFile(fileId, name)
+                    } else if (key == "info") {
+                        getFileInfoDlg(fileId)
+                    }
+                },
+                items: {
+                    "recovery": { name: "还原", icon: "open" },
+                    "delete": { name: "彻底删除", icon: "delete" },
+                    "info": { name: "属性", icon: "rename" },
+                }
+            });
+
+
+            //左边
+            $.contextMenu({
+                selector: '.el-tree-node__content',
+                trigger: 'none',
+                callback: function (key, options, e) {
+                    var m = "clicked: " + key;
+                    console.log(key)
+                    //当前点击目录id
+                    var curClickDirectoryId = $(".custom-tree-node", this).children().attr("id")
+                    console.log(curClickDirectoryId)
+                    if (key == "add") {
+                        createDirectory(curClickDirectoryId)
+                    } else if (key == "delete") {
+                        deleteDirectory(curClickDirectoryId)
+                    }
+                },
+                items: {
+                    "add": { name: "增加目录", icon: "add" },
+                    "delete": { name: "删除目录", icon: "delete" },
+                    //"cut": { name: "Cut", icon: "cut" },
+                    //"copy": { name: "Copy", icon: "copy" },
+                    //"paste": { name: "Paste", icon: "paste" },
+                    //"sep1": "---------",
+                    //"quit": { name: "Quit", icon: function ($element, key, item) { return 'context-menu-icon context-menu-icon-quit'; } }
+                }
+            });
+        });
+
+        
+        $('.el-page-header__left').click(function () {
+            window.location.href="/Index"
+        })
+
+    </script>
+}

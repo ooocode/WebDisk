@@ -1,0 +1,14 @@
+{
+  "version": "1.0",
+  "defaultProvider": "cdnjs",
+  "libraries": [
+    {
+      "library": "element-ui@2.13.0",
+      "destination": "wwwroot/lib/element-ui/"
+    },
+    {
+      "library": "jquery-contextmenu@2.9.0",
+      "destination": "wwwroot/lib/jquery-contextmenu/"
+    }
+  ]
+}

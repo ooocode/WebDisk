@@ -1,0 +1,302 @@
+﻿@page
+@model WebDisk.MySharedModel
+@{
+    ViewData["Title"] = "MyShared";
+}
+
+
+
+<div id="app">
+    <div class="row">
+        <div class="col-md-3">
+            <el-menu default-active="3" class="el-menu-vertical-demo">
+                <el-menu-item index="1" onclick="window.location.href='/Index'">
+                    <i class="el-icon-document"></i>
+                    <span slot="title">全部文件</span>
+                </el-menu-item>
+
+                <el-menu-item index="2" onclick="window.location.href='/Recyclebin'">
+                    <i class="el-icon-delete"></i>
+                    <span slot="title">回收站</span>
+                </el-menu-item>
+
+                <el-menu-item index="3" onclick="window.location.href='/MyShared'">
+                    <i class="el-icon-share"></i>
+                    <span slot="title">我的分享</span>
+                </el-menu-item>
+            </el-menu>
+
+        </div>
+
+        <div class="col-md-9">
+            <el-page-header content="我的分享">
+            </el-page-header>
+            <hr />
+
+            <div>
+                <template>
+                    <template v-if="showCopyLink">
+                        <el-button v-on:click="copyLink()" size="mini"><i class="el-icon-document-copy"></i>&nbsp;复制链接</el-button>
+                    </template>
+                    <template v-else>
+                        <el-button v-on:click="copyLink()" size="mini" disabled><i class="el-icon-document-copy"></i>&nbsp;复制链接</el-button>
+                    </template>
+                </template>
+               
+                <template>
+                    <template v-if="showCancelShared">
+                        <el-button size="mini"><i class="el-icon-delete"></i>&nbsp;取消分享</el-button>
+                    </template>
+                    <template v-else>
+                        <el-button size="mini" disabled><i class="el-icon-delete"></i>&nbsp;取消分享</el-button>
+                    </template>
+                </template>
+            </div>
+               
+            <hr />
+            <el-table ref="multipleTable"
+                      :data="tableData"
+                      tooltip-effect="dark"
+                      style="width: 100%"
+                      @@selection-change="handleSelectionChange">
+                <el-table-column type="selection"
+                                 width="55">
+                </el-table-column>
+                <el-table-column label="日期"
+                                 width="120">
+                    <template slot-scope="scope">
+                        {{ scope.row.date }}
+                    </template>
+                </el-table-column>
+                <el-table-column prop="name"
+                                 label="姓名"
+                                 width="120">
+                </el-table-column>
+
+                <el-table-column prop="address"
+                                 label="地址"
+                                 show-overflow-tooltip>
+                </el-table-column>
+            </el-table>
+            @*<div style="margin-top: 20px">
+                <el-button @@click="toggleSelection([tableData[1], tableData[2]])">切换第二、第三行的选中状态</el-button>
+                <el-button @@click="toggleSelection()">取消选择</el-button>
+            </div>*@
+        </div>
+    </div>
+</div>
+
+
+
+@section Scripts{
+
+    <script>
+        var vue = new Vue({
+            el: '#app',
+
+            data: {
+                //显示复制链接按钮
+                showCopyLink: false,
+                //显示取消分享按钮
+                showCancelShared: false,
+
+                tableData: [{
+          date: '2016-05-03',
+          name: '王小虎',
+          address: '上海市普陀区金沙江路 1518 弄'
+        }, {
+          date: '2016-05-02',
+          name: '王小虎',
+          address: '上海市普陀区金沙江路 1518 弄'
+        }, {
+          date: '2016-05-04',
+          name: '王小虎',
+          address: '上海市普陀区金沙江路 1518 弄'
+        }, {
+          date: '2016-05-01',
+          name: '王小虎',
+          address: '上海市普陀区金沙江路 1518 弄'
+        }, {
+          date: '2016-05-08',
+          name: '王小虎',
+          address: '上海市普陀区金沙江路 1518 弄'
+        }, {
+          date: '2016-05-06',
+          name: '王小虎',
+          address: '上海市普陀区金沙江路 1518 弄'
+        }, {
+          date: '2016-05-07',
+          name: '王小虎',
+          address: '上海市普陀区金沙江路 1518 弄'
+        }],
+        multipleSelection: []
+            },
+
+            created: function () {
+                var t = this
+                axios.get("/Index?handler=Directories").then(function (res) {
+                    //
+                    t.directories = res.data
+                    console.log(t.directories)
+                })
+            },
+
+            methods: {
+                getUrl: function (id) {
+                    return "/Index/" + id
+                },
+                handeContextmenu(event, data, node, thi) {
+                    $(event.target).contextMenu(/*{ x: event.clientX, y: event.clientY }*/);
+                },
+
+                toggleSelection(rows) {
+        if (rows) {
+          rows.forEach(row => {
+            this.$refs.multipleTable.toggleRowSelection(row);
+          });
+        } else {
+          this.$refs.multipleTable.clearSelection();
+        }
+                },
+
+                handleSelectionChange(val) {
+                    this.multipleSelection = val;
+                    //console.log(val.length)
+
+                    if (val.length > 0) {
+                        this.showCancelShared = true;
+                        if (val.length == 1) {
+                            this.showCopyLink = true;
+                        }
+                    } else {
+                        this.showCopyLink = false;
+                        this.showCancelShared = false;
+                    }
+                    console.log(val)
+                },
+
+                //复制链接
+                copyLink: function () {
+                    console.log(this.multipleSelection)
+                },
+            }
+        })
+
+
+        $(function () {
+            //主区域
+            $.contextMenu({
+                selector: '.col-md-8',
+                //trigger: 'none',
+                callback: function (key, options, e) {
+                    if (key == "add") {
+                        @*createDirectory('@Model.Id')*@
+                    }else if (key == "reflush") {
+                        window.location.reload()
+                    }
+                },
+                items: {
+                    "add": { name: "新建文件夹", icon: "add" },
+                    "reflush": { name: "刷新", icon: "add" }
+                }
+            });
+
+            //目录选项
+            $.contextMenu({
+                selector: '.dir-item',
+                //trigger: 'none',
+                callback: function (key, options, e) {
+                    var dirId = $(this).attr('dirid')
+                    var name = $(this).text()
+                    if (key == "recoveryDirectory") {
+                        if (dirId && dirId !== "") {
+                            recoveryDirectory(dirId)
+                        }
+                    } else if (key == "delete") {
+                        deleteDirectory(dirId,name)
+                    }
+                },
+                items: {
+                    "recoveryDirectory": { name: "还原", icon: "open" },
+                    "delete": { name: "彻底删除", icon: "delete" }
+                }
+            });
+
+            //$('.dir-item').dblclick(function () {
+            //    var dirId = $(this).attr('dirid')
+            //    window.location.href = "/Index/" + dirId
+            //})
+
+            $(document).contextmenu(function(){
+                return false;
+            });
+
+            $('.file-item').mousedown(function(e){
+                if (3 == e.which) {
+                     $(this).focus()                }
+            })
+
+            $('.dir-item').mousedown(function(e){
+                if (3 == e.which) {
+                     $(this).focus()                }
+            })
+
+            //文件选项
+            $.contextMenu({
+                selector: '.file-item',
+                //trigger: 'none',
+                callback: function (key, options, e) {
+                    var fileId = $(this).attr('fileid')
+                    var name = $(this).text()
+
+                    if (key == "recovery") {
+                        recoveryFile(fileId)
+                    } else if (key == "delete") {
+                        deleteFile(fileId, name)
+                    } else if (key == "info") {
+                        getFileInfoDlg(fileId)
+                    }
+                },
+                items: {
+                    "recovery": { name: "还原", icon: "open" },
+                    "delete": { name: "彻底删除", icon: "delete" },
+                    "info": { name: "属性", icon: "rename" },
+                }
+            });
+
+
+            //左边
+            $.contextMenu({
+                selector: '.el-tree-node__content',
+                trigger: 'none',
+                callback: function (key, options, e) {
+                    var m = "clicked: " + key;
+                    console.log(key)
+                    //当前点击目录id
+                    var curClickDirectoryId = $(".custom-tree-node", this).children().attr("id")
+                    console.log(curClickDirectoryId)
+                    if (key == "add") {
+                        createDirectory(curClickDirectoryId)
+                    } else if (key == "delete") {
+                        deleteDirectory(curClickDirectoryId)
+                    }
+                },
+                items: {
+                    "add": { name: "增加目录", icon: "add" },
+                    "delete": { name: "删除目录", icon: "delete" },
+                    //"cut": { name: "Cut", icon: "cut" },
+                    //"copy": { name: "Copy", icon: "copy" },
+                    //"paste": { name: "Paste", icon: "paste" },
+                    //"sep1": "---------",
+                    //"quit": { name: "Quit", icon: function ($element, key, item) { return 'context-menu-icon context-menu-icon-quit'; } }
+                }
+            });
+        });
+
+
+        $('.el-page-header__left').click(function () {
+            window.location.href="/Index"
+        })
+
+    </script>
+}

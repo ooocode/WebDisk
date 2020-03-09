@@ -1,0 +1,18 @@
+﻿@page
+@model WebDisk.AccessDeniedModel
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>无权限禁止访问</title>
+</head>
+<body>
+    <p>@User?.Identity?.Name</p>
+    <p>无权限禁止访问，可联系管理员开通访问权限</p>
+</body>
+</html>

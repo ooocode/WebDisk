@@ -1,0 +1,14 @@
+@using WebDisk
+@namespace WebDisk.Pages
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+
+@using WebDisk.Models
+@inject FileDbContext FileDbContext
+
+@using Microsoft.EntityFrameworkCore
+@using WebDisk.Services
+@using Services.Req
+@inject DirectoryService DirectoryService
+@inject FileService FileService
+
+@inject Microsoft.Extensions.Configuration.IConfiguration Configuration
